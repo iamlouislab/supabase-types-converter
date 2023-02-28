@@ -42,7 +42,9 @@ function ApiCallForm() {
       console.log(data);
     } catch (error: any) {
       console.error(error);
-      setError(error.message);
+      setError(error);
+    } finally {
+      setLoading(false);
     }
   };
 
