@@ -5,7 +5,7 @@ interface ApiResponse {
 }
 
 interface DefinitionProperty {
-  format?: string;
+  format: string;
   type: string;
   description?: string;
 }
@@ -25,41 +25,102 @@ interface Definitions {
   [key: string]: Definition;
 }
 
-function generateSwiftType(name: string, properties: DefinitionProperties) {
-  let swiftCode = `struct ${capitalize(name)} {\n`;
+function generateSwiftType(name: string, properties: DefinitionProperties, requiredList: Definition["required"]) {
+  let swiftCode = `struct ${capitalize(name)}: Codable {\n`;
 
   // Add properties
   for (const key in properties) {
     if (Object.prototype.hasOwnProperty.call(properties, key)) {
       const camelizedName = camelCase(key);
-      const swiftType = convertType(properties[key].type);
+      const swiftType = convertType(properties[key].format);
+      const required = requiredList.includes(key) ? '' : '?';
       const description = properties[key].description ? ` // ${properties[key].description?.trim().replace("\n", " ")}` : '';
 
-      swiftCode += `  let ${camelizedName}: ${swiftType}${description}\n`;
+      swiftCode += `  let ${camelizedName}: ${swiftType}${required} ${description}\n`;
     }
   }
+
+  // Add enum CodingKeys
+  swiftCode += `
+  enum CodingKeys: String, CodingKey {
+`;
+  
+  for (const key in properties) {
+    if (Object.prototype.hasOwnProperty.call(properties, key)) {
+      const camelizedName = camelCase(key);
+
+      swiftCode += `    case ${camelizedName} = "${key}"\n`;
+    }
+  }
+
+  swiftCode += `  }
+`;
 
   swiftCode += "}\n";
 
   return swiftCode;
 }
 
-function convertType(type: string) {
-  switch (type) {
+function convertType(format: string) {
+  console.log("format: ", format);
+  switch (format) {
     case 'integer':
+      return 'Int';
+    case 'integer[]':
+      return '[Int]';
+    case 'bigint':
+      return 'Int';
+    case 'bigint[]':
+      return '[Int]';
+    case 'smallint':
+      return 'Int';
+    case 'smallint[]':
       return 'Int';
     case 'boolean':
       return 'Bool';
+    case 'boolean[]':
+      return '[Bool]';
     case 'string':
       return 'String';
+    case 'string[]':
+      return '[String]';
     case 'float':
       return 'Float';
-    case 'double':
-      return 'Double';
-    default:
+    case 'time with time zone':
+    case 'timestamp with time zone':
+    case 'timestamp without time zone':
+    case 'date':
+      return 'Date';
+    case 'timestamp with time zone[]':
+    case 'timestamp without time zone[]':
+    case 'time with time zone[]':
+    case 'date[]':
+      return '[Date]';
+    case 'uuid':
       return 'String';
+    case 'uuid[]':
+      return '[String]';
+    case 'character varying':
+      return 'String';
+    case 'character varying[]':
+      return '[String]';
+    case 'text':
+      return 'String';
+    case 'text[]':
+      return '[String]';
+    case 'jsonb':
+      return 'TO_DEFINE';
+    case 'jsonb[]':
+      return 'TO_DEFINE';
+    case 'json':
+      return 'TO_DEFINE';
+    case 'json[]':
+      return 'TO_DEFINE';
+    default:
+      throw(`Unknown type: ${format}`);
   }
 }
+
 
 function generateSwiftTypes(apiResponse: ApiResponse) {
     let swiftCode = '';
@@ -73,7 +134,7 @@ function generateSwiftTypes(apiResponse: ApiResponse) {
       if (definition.type === 'object') {
         const properties = definition.properties;
 
-        swiftCode += generateSwiftType(name, properties);
+        swiftCode += generateSwiftType(name, properties, definition.required);
       }
     }
   }
