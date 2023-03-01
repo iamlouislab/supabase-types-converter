@@ -26,6 +26,7 @@ interface Definitions {
 }
 
 function generateSwiftType(name: string, properties: DefinitionProperties, requiredList: Definition["required"]) {
+
   let swiftCode = `struct ${capitalize(name)}: Codable {\n`;
 
   // Add properties
@@ -56,7 +57,7 @@ function generateSwiftType(name: string, properties: DefinitionProperties, requi
   swiftCode += `  }
 `;
 
-  swiftCode += "}\n";
+  swiftCode += "}\n\n";
 
   return swiftCode;
 }
@@ -97,9 +98,9 @@ function convertType(format: string) {
     case 'date[]':
       return '[Date]';
     case 'uuid':
-      return 'String';
+      return 'UUID';
     case 'uuid[]':
-      return '[String]';
+      return '[UUID]';
     case 'character varying':
       return 'String';
     case 'character varying[]':
@@ -123,9 +124,16 @@ function convertType(format: string) {
 
 
 function generateSwiftTypes(apiResponse: ApiResponse) {
-    let swiftCode = '';
+
+  let disclaimer = `/// This file is generated automatically. Some types might not be perfectly corresponding to your database types.\n`;
+  disclaimer += `/// For instance if your primary key is optionnal and is automatically generated when inserting new data, the id parameter will still be required in the generated code.\n`;
+  disclaimer += `/// Please check the generated code and adapt it to your needs.\n`;
+
+  let swiftCode = `${disclaimer}\n`;
+
+  swiftCode += `import Foundation\n\n`;
     
-    const definitions = apiResponse.definitions;
+  const definitions = apiResponse.definitions;
 
   for (const name in definitions) {
     if (Object.prototype.hasOwnProperty.call(definitions, name)) {
