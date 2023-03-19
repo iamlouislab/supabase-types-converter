@@ -87,6 +87,14 @@ function convertType(format: string) {
       return '[String]';
     case 'float':
       return 'Float';
+    case 'numeric':
+      return 'Decimal';
+    case 'numeric[]':
+      return '[Decimal]';
+    case 'real':
+      return 'Double';
+    case 'real[]':
+      return '[Double]';
     case 'time with time zone':
     case 'timestamp with time zone':
     case 'timestamp without time zone':
