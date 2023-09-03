@@ -96,6 +96,7 @@ function convertType(format: string) {
     case 'real[]':
       return '[Double]';
     case 'time with time zone':
+    case 'time without time zone':
     case 'timestamp with time zone':
     case 'timestamp without time zone':
     case 'date':
