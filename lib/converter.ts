@@ -27,7 +27,7 @@ interface Definitions {
 
 function generateSwiftType(name: string, properties: DefinitionProperties, requiredList: Definition["required"]) {
 
-  let swiftCode = `struct ${capitalize(name)}: Codable {\n`;
+  let swiftCode = `struct ${capitalize(name)}: Codable, Identifiable {\n`;
 
   // Add properties
   for (const key in properties) {
